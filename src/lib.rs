@@ -37,6 +37,10 @@ mod tests {
         x.insert(1, "Random stuff".to_owned());
         x.insert(3, "aaaaa".to_owned());
         x.insert(5, "ae".to_owned());
+        x.insert(
+            9,
+            "I categorically deny having triskaidekaphobia.".to_owned(),
+        );
 
         assert_eq!(x, search(conf.query.as_str(), content.as_str()))
     }
