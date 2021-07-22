@@ -1,4 +1,5 @@
 use linked_hash_map::LinkedHashMap;
+use regex::Regex;
 use std::error::Error;
 use std::fmt::Display;
 use std::fs::File;
@@ -36,6 +37,24 @@ mod tests {
         x.insert(1, "Random stuff".to_owned());
         x.insert(3, "aaaaa".to_owned());
         x.insert(5, "ae".to_owned());
+
+        assert_eq!(x, search(conf.query.as_str(), content.as_str()))
+    }
+
+    #[test]
+    fn regex() {
+        let conf = Config {
+            query: "\\b\\w{13}\\b".to_owned(),
+            filename: "file.txt".to_owned(),
+        };
+
+        let content = get_content(&conf).expect("Failed to get content");
+
+        let mut x: LinkedHashMap<usize, String> = LinkedHashMap::new();
+        x.insert(
+            9,
+            "I categorically deny having triskaidekaphobia.".to_owned(),
+        );
 
         assert_eq!(x, search(conf.query.as_str(), content.as_str()))
     }
@@ -112,8 +131,9 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
 fn search(query: &str, contents: &str) -> LinkedHashMap<usize, String> {
     let mut results = LinkedHashMap::new();
     let mut line_num: usize = 1;
+    let re = Regex::new(query).unwrap();
     for line in contents.lines() {
-        if line.contains(query) {
+        if re.is_match(line) {
             results.insert(line_num, line.to_string());
         }
         line_num += 1;
