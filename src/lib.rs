@@ -17,8 +17,8 @@ mod tests {
             filename: "a.txt".to_owned(),
         };
 
-        let content = get_content(&conf).unwrap();
-        let mut x : LinkedHashMap<usize, String> = LinkedHashMap::new();
+        let content = get_content(&conf).expect("Failed to get content!");
+        let mut x: LinkedHashMap<usize, String> = LinkedHashMap::new();
         x.insert(1, "a".to_owned());
 
         assert_eq!(x, search(conf.query.as_str(), content.as_str()))
@@ -31,8 +31,8 @@ mod tests {
             filename: "file.txt".to_owned(),
         };
 
-        let content = get_content(&conf).unwrap();
-        let mut x : LinkedHashMap<usize, String> = LinkedHashMap::new();
+        let content = get_content(&conf).expect("Failed to get content!");
+        let mut x: LinkedHashMap<usize, String> = LinkedHashMap::new();
         x.insert(1, "Random stuff".to_owned());
         x.insert(3, "aaaaa".to_owned());
         x.insert(5, "ae".to_owned());
@@ -70,11 +70,16 @@ impl Display for Config {
 fn get_content(config: &Config) -> Option<String> {
     let _f = File::open(&config.filename).unwrap_or_else(|error| match error.kind() {
         ErrorKind::NotFound => {
-            print_stderr(format!("File '{}' not found, exiting...", &config.filename)).unwrap();
+            stderr(format!("File '{}' not found, exiting...", &config.filename))
+                .expect("Failed to print error message for get_content!");
             process::exit(1);
         }
         ErrorKind::PermissionDenied => {
-            print_stderr(format!("Missing permissions to open file '{}'.", &config.filename)).unwrap();
+            stderr(format!(
+                "Missing permissions to open file '{}'.",
+                &config.filename
+            ))
+            .expect("Failed to print error message for get_content!");
             process::exit(1);
         }
         _ => panic!("Problem opening the file: {:?}", error),
@@ -84,9 +89,11 @@ fn get_content(config: &Config) -> Option<String> {
     Some(content)
 }
 
-fn print_stderr(message: String) -> Result<(), Box<dyn Error>> {
+fn stderr(message: String) -> Result<(), Box<dyn Error>> {
     let mut stderr = StandardStream::stderr(ColorChoice::Always);
-    stderr.set_color(ColorSpec::new().set_fg(Some(Color::Red))).unwrap();
+    stderr
+        .set_color(ColorSpec::new().set_fg(Some(Color::Red)))
+        .unwrap();
     eprintln!("{}", message);
 
     Ok(())
@@ -115,7 +122,8 @@ fn search(query: &str, contents: &str) -> LinkedHashMap<usize, String> {
     if results.len() != 0 {
         results
     } else {
-        print_stderr(format!("Pattern '{}' is not present in file.", query)).unwrap();
+        stderr(format!("Pattern '{}' is not present in file.", query))
+            .expect("Failed to print error message for search!");
         process::exit(1)
     }
 }

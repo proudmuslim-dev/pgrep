@@ -11,5 +11,5 @@ fn main() {
         process::exit(1);
     });
 
-    pgrep::run(config).unwrap();
+    pgrep::run(config).expect("Failed to run pgrep!");
 }
