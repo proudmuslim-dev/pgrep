@@ -92,16 +92,24 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn new(args: &[String]) -> Result<Config, &str> {
-        if args.len() < 3 {
-            stderr("Not enough arguments.").unwrap();
-            process::exit(1)
-        }
+    pub fn new(mut args: env::Args) -> Result<Config, &'static str> {
+        args.next();
+        let query = match args.next() {
+            Some(arg) => arg,
+            None => return Err("No query supplied!")
+        };
+
+        let filename = match args.next() {
+            Some(arg) => arg,
+            None => return Err("No file supplied!")
+        };
+
+        let case_sensitive = !env::var("CASE_INSENSITIVE").is_err();
 
         Ok(Config {
-            query: args[1].clone(),
-            filename: args[2].clone(),
-            case_sensitive: !env::var("CASE_INSENSITIVE").is_err(),
+            query,
+            filename,
+            case_sensitive
         })
     }
 }
@@ -117,26 +125,7 @@ impl Display for Config {
     }
 }
 
-fn get_content(config: &Config) -> Option<String> {
-    let _f = File::open(&config.filename).unwrap_or_else(|error| match error.kind() {
-        ErrorKind::NotFound => {
-            stderr(format!("File '{}' not found, exiting...", &config.filename).as_str())
-                .expect("Failed to print error message for get_content!");
-            process::exit(1);
-        }
-        ErrorKind::PermissionDenied => {
-            stderr(format!("Missing permissions to open file '{}'.", &config.filename).as_str())
-                .expect("Failed to print error message for get_content!");
-            process::exit(1);
-        }
-        _ => panic!("Problem opening the file: {:?}", error),
-    });
-
-    let content = fs::read_to_string(&config.filename).expect("Unable to read file");
-    Some(content)
-}
-
-fn stderr(message: &str) -> Result<(), Box<dyn Error>> {
+pub fn stderr(message: &str) -> Result<(), Box<dyn Error>> {
     let mut stderr = StandardStream::stderr(ColorChoice::Always);
     stderr
         .set_color(ColorSpec::new().set_fg(Some(Color::Red)))
@@ -187,4 +176,23 @@ fn search(config: Config, content: String) -> LinkedHashMap<usize, String> {
             .expect("Failed to print error message for search!");
         process::exit(1)
     }
+}
+
+fn get_content(config: &Config) -> Option<String> {
+    let _f = File::open(&config.filename).unwrap_or_else(|error| match error.kind() {
+        ErrorKind::NotFound => {
+            stderr(format!("File '{}' not found, exiting...", &config.filename).as_str())
+                .expect("Failed to print error message for get_content!");
+            process::exit(1);
+        }
+        ErrorKind::PermissionDenied => {
+            stderr(format!("Missing permissions to open file '{}'.", &config.filename).as_str())
+                .expect("Failed to print error message for get_content!");
+            process::exit(1);
+        }
+        _ => panic!("Problem opening the file: {:?}", error),
+    });
+
+    let content = fs::read_to_string(&config.filename).expect("Unable to read file");
+    Some(content)
 }
