@@ -1,13 +1,11 @@
-use std::env;
-use std::error::Error;
-use std::fmt::Display;
-use std::fs::File;
-use std::io::ErrorKind;
-use std::{fmt, fs, process};
+pub mod util;
+
+use std::{env, error::Error, fmt, fmt::Display, fs, fs::File, io::ErrorKind, process};
+
 
 use linked_hash_map::LinkedHashMap;
 use regex::Regex;
-use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
+use util::stderr;
 
 #[cfg(test)]
 mod tests {
@@ -96,12 +94,12 @@ impl Config {
         args.next();
         let query = match args.next() {
             Some(arg) => arg,
-            None => return Err("No query supplied!")
+            None => return Err("No query supplied!"),
         };
 
         let filename = match args.next() {
             Some(arg) => arg,
-            None => return Err("No file supplied!")
+            None => return Err("No file supplied!"),
         };
 
         let case_sensitive = !env::var("CASE_INSENSITIVE").is_err();
@@ -109,7 +107,7 @@ impl Config {
         Ok(Config {
             query,
             filename,
-            case_sensitive
+            case_sensitive,
         })
     }
 }
@@ -125,16 +123,7 @@ impl Display for Config {
     }
 }
 
-pub fn stderr(message: &str) -> Result<(), Box<dyn Error>> {
-    let mut stderr = StandardStream::stderr(ColorChoice::Always);
-    stderr
-        .set_color(ColorSpec::new().set_fg(Some(Color::Red)))
-        .unwrap();
-    eprintln!("{}", message);
-
-    Ok(())
-}
-
+// TODO: Move the rest of the functions into the impl block of Config
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     // println!("{}", config.case_sensitive);
     let content = crate::get_content(&config).unwrap();

@@ -5,7 +5,7 @@ use pgrep::Config;
 
 fn main() {
     let config = Config::new(env::args()).unwrap_or_else(|err| {
-        pgrep::stderr(format!("Problem parsing arguments: {}", err).as_str()).unwrap();
+        pgrep::util::stderr(format!("Problem parsing arguments: {}", err).as_str()).unwrap();
         process::exit(1);
     });
 
